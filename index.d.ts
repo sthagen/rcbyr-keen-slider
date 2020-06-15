@@ -1,11 +1,17 @@
 type THtmlElementGetter = () => NodeListOf<Element>
 type TContainer =
+  | HTMLElement
+  | NodeListOf<Element>
+  | string
+  | THtmlElementGetter
+  | undefined
+type TSlides =
+  | HTMLElement
   | NodeListOf<Element>
   | string
   | THtmlElementGetter
   | number
   | undefined
-type TSlides = NodeListOf<Element> | string | THtmlElementGetter | undefined
 
 type TDetails = {
   direction: 1 | 0 | -1
@@ -64,6 +70,11 @@ export default class KeenSlider {
   prev: () => void
   destroy: () => void
   refresh: () => void
+  moveToSlideRelative: (
+    slide: number,
+    nearest?: boolean,
+    duration?: number
+  ) => void
   moveToSlide: (slide: number, duration?: number) => void
   resize: () => void
   details: () => TDetails

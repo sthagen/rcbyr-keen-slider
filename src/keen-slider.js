@@ -62,6 +62,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     if (!eventIsSlide(e) && touchJustStarted) {
       return eventDragStop(e)
     }
+    if (touchJustStarted) touchLastX = x
     if (e.cancelable) e.preventDefault()
     touchJustStarted = false
     const touchDistance = touchLastX - x
@@ -76,8 +77,8 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     touchIdentifier = eventGetIdentifier(e)
     eventIsSlide(e)
     moveAnimateAbort()
-    touchLastX = eventGetX(e).x
     touchIndexStart = trackCurrentIdx
+    touchLastX = eventGetX(e).x
     trackAdd(0, e.timeStamp)
     hook('dragStart')
   }
@@ -260,9 +261,16 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     moveToIdx(startIndex + Math.sign(trackDirection))
   }
 
-  function moveToIdx(idx, forceFinish, duration = options.duration) {
+  function moveToIdx(
+    idx,
+    forceFinish,
+    duration = options.duration,
+    relative = false,
+    nearest = false
+  ) {
     // forceFinish is used to ignore boundaries when rubberband movement is active
-    idx = trackClampIndex(idx)
+
+    idx = trackGetIdx(idx, relative, nearest)
     const easing = t => 1 + --t * t * t * t * t
     moveTo(trackGetIdxDistance(idx), duration, easing, forceFinish)
   }
@@ -314,7 +322,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     const speed = trackSpeed
     const cb = () => {
       moveTo(
-        trackGetIdxDistance(trackClampIndex(trackCurrentIdx)),
+        trackGetIdxDistance(trackGetIdx(trackCurrentIdx)),
         500,
         easing,
         true
@@ -476,13 +484,11 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   }
 
   function trackClampIndex(idx) {
-    return !isLoop()
-      ? clampValue(
-          idx,
-          0,
-          length - 1 - (isCenterMode() ? 0 : slidesPerView - 1)
-        )
-      : idx
+    return clampValue(
+      idx,
+      0,
+      length - 1 - (isCenterMode() ? 0 : slidesPerView - 1)
+    )
   }
 
   function trackGetDetails() {
@@ -502,8 +508,31 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     }
   }
 
+  function trackGetIdx(idx, relative = false, nearest = false) {
+    return !isLoop()
+      ? trackClampIndex(idx)
+      : !relative
+      ? idx
+      : trackGetRelativeIdx(idx, nearest)
+  }
+
   function trackGetIdxDistance(idx) {
     return -(-((width / slidesPerView) * idx) + trackPosition)
+  }
+
+  function trackGetRelativeIdx(idx, nearest) {
+    idx = ((idx % length) + length) % length
+    const current = ((trackCurrentIdx % length) + length) % length
+    const left = current < idx ? -current - length + idx : -(current - idx)
+    const right = current > idx ? length - current + idx : idx - current
+    const add = nearest
+      ? Math.abs(left) <= right
+        ? left
+        : right
+      : idx < current
+      ? left
+      : right
+    return trackCurrentIdx + add
   }
 
   function trackMeasure(val, timestamp) {
@@ -629,6 +658,9 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     },
     moveToSlide(idx, duration) {
       moveToIdx(idx, false, duration)
+    },
+    moveToSlideRelative(idx, nearest = false, duration) {
+      moveToIdx(idx, false, duration, true, nearest)
     },
     resize() {
       sliderResize(true)
