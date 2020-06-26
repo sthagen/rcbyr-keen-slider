@@ -343,11 +343,11 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     moveAnimate()
   }
 
-  function sliderBind() {
+  function sliderBind(force_resize) {
     let _container = getElements(initialContainer)
     if (!_container.length) return
     container = _container[0]
-    sliderResize()
+    sliderResize(force_resize)
     eventsAdd()
     hook('mounted')
   }
@@ -375,10 +375,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     hook('created')
   }
 
-  function sliderRebind(new_options) {
+  function sliderRebind(new_options, force_resize) {
     if (new_options) initialOptions = new_options
     sliderUnbind()
-    sliderBind()
+    sliderBind(force_resize)
   }
 
   function sliderResize(force) {
@@ -398,7 +398,11 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     touchMultiplicator =
       typeof dragSpeed === 'function' ? dragSpeed : val => val * dragSpeed
     width = isVertialSlider() ? container.offsetHeight : container.offsetWidth
-    slidesPerView = clampValue(options.slidesPerView, 1, length - 1)
+    slidesPerView = clampValue(
+      options.slidesPerView,
+      1,
+      isLoop() ? length - 1 : length
+    )
     spacing = clampValue(options.spacing, 0, width / (slidesPerView - 1) - 1)
     width += spacing
     origin = isCenterMode()
@@ -461,6 +465,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     slides.forEach(slide => {
       slide.style.removeProperty(isVertialSlider() ? 'height' : 'width')
       slide.style.removeProperty('transform')
+      slide.style.removeProperty('-webkit-transform')
     })
   }
 
@@ -597,8 +602,8 @@ function KeenSlider(initialContainer, initialOptions = {}) {
         portion: portion < 0 || portion > 1 ? 0 : portion,
         distance,
       })
-      trackSlidePositions = slidePositions
     }
+    trackSlidePositions = slidePositions
     slidesSetPositions()
     hook('move')
   }
@@ -649,18 +654,20 @@ function KeenSlider(initialContainer, initialOptions = {}) {
       touchControls = active
     },
     destroy: sliderUnbind,
-    refresh: sliderRebind,
+    refresh(options) {
+      sliderRebind(options, true)
+    },
     next() {
-      moveToIdx(trackCurrentIdx + 1)
+      moveToIdx(trackCurrentIdx + 1, true)
     },
     prev() {
-      moveToIdx(trackCurrentIdx - 1)
+      moveToIdx(trackCurrentIdx - 1, true)
     },
     moveToSlide(idx, duration) {
-      moveToIdx(idx, false, duration)
+      moveToIdx(idx, true, duration)
     },
     moveToSlideRelative(idx, nearest = false, duration) {
-      moveToIdx(idx, false, duration, true, nearest)
+      moveToIdx(idx, true, duration, true, nearest)
     },
     resize() {
       sliderResize(true)
