@@ -2,6 +2,7 @@ import './polyfills'
 
 function KeenSlider(initialContainer, initialOptions = {}) {
   const events = []
+  const attributeVertical = 'data-keen-slider-v'
   let container
   let touchControls
   let length
@@ -62,7 +63,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     if (!eventIsSlide(e) && touchJustStarted) {
       return eventDragStop(e)
     }
-    if (touchJustStarted) touchLastX = x
+    if (touchJustStarted) {
+      trackMeasureReset()
+      touchLastX = x
+    }
     if (e.cancelable) e.preventDefault()
     touchJustStarted = false
     const touchDistance = touchLastX - x
@@ -71,7 +75,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   }
 
   function eventDragStart(e) {
-    if (touchActive || !isTouchable()) return
+    if (touchActive || !isTouchable() || eventIsIgnoreTarget(e.target)) return
     touchActive = true
     touchJustStarted = true
     touchIdentifier = eventGetIdentifier(e)
@@ -125,6 +129,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     }
   }
 
+  function eventIsIgnoreTarget(target) {
+    return target.hasAttribute(options.preventEvent)
+  }
+
   function eventIsSlide(e) {
     const touches = eventGetTargetTouches(e)
     if (!touches) return true
@@ -148,7 +156,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function eventsAdd() {
     eventAdd(window, 'orientationchange', sliderResizeFix)
-    eventAdd(window, 'resize', sliderResize)
+    eventAdd(window, 'resize', () => sliderResize())
     eventAdd(container, 'dragstart', function (e) {
       if (!isTouchable()) return
       e.preventDefault()
@@ -366,6 +374,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     if (_options.breakpoints && breakpointCurrent) delete _options.breakpoints
     options = { ...defaultOptions, ...initialOptions, ..._options }
     optionsChanged = true
+    resizeLastWidth = null
     sliderRebind()
   }
 
@@ -377,6 +386,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function sliderRebind(new_options, force_resize) {
     if (new_options) initialOptions = new_options
+    if (force_resize) breakpointCurrent = null
     sliderUnbind()
     sliderBind(force_resize)
   }
@@ -401,7 +411,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     slidesPerView = clampValue(
       options.slidesPerView,
       1,
-      isLoop() ? length - 1 : length
+      Math.max(isLoop() ? length - 1 : length, 1)
     )
     spacing = clampValue(options.spacing, 0, width / (slidesPerView - 1) - 1)
     width += spacing
@@ -409,12 +419,16 @@ function KeenSlider(initialContainer, initialOptions = {}) {
       ? (width / 2 - width / slidesPerView / 2) / width
       : 0
     slidesSetWidths()
-    sliderSetHeight()
-    trackSetPositionByIdx(
+
+    const currentIdx =
       !sliderCreated || (optionsChanged && options.resetSlide)
         ? options.initial
         : trackCurrentIdx
-    )
+    trackSetPositionByIdx(isLoop() ? currentIdx : trackClampIndex(currentIdx))
+
+    if (isVertialSlider()) {
+      container.setAttribute(attributeVertical, true)
+    }
     optionsChanged = false
   }
 
@@ -427,45 +441,56 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   function sliderUnbind() {
     eventsRemove()
     slidesRemoveStyles()
+    if (container && container.hasAttribute(attributeVertical))
+      container.removeAttribute(attributeVertical)
     hook('destroyed')
-  }
-
-  function sliderSetHeight() {
-    if (!slides || !options.autoHeight || isVertialSlider()) return
-    const height = slides.reduce(
-      (acc, slide) => Math.max(acc, slide.offsetHeight),
-      0
-    )
-    container.style.height = height + 'px'
   }
 
   function slidesSetPositions() {
     if (!slides) return
     slides.forEach((slide, idx) => {
       const absoluteDistance = trackSlidePositions[idx].distance * width
-      const x = isVertialSlider() ? 0 : absoluteDistance
-      const y = isVertialSlider() ? absoluteDistance : 0
-      slide.style.transform = `translate3d(${x}px, ${y}px, 0)`
-      slide.style['-webkit-transform'] = `translate3d(${x}px, ${y}px, 0)`
+      const pos =
+        absoluteDistance -
+        idx *
+          (width / slidesPerView -
+            spacing / slidesPerView -
+            (spacing / slidesPerView) * (slidesPerView - 1))
+
+      const x = isVertialSlider() ? 0 : pos
+      const y = isVertialSlider() ? pos : 0
+      const transformString = `translate3d(${x}px, ${y}px, 0)`
+      slide.style.transform = transformString
+      slide.style['-webkit-transform'] = transformString
     })
   }
 
   function slidesSetWidths() {
     if (!slides) return
     slides.forEach(slide => {
-      const key = isVertialSlider() ? 'height' : 'width'
-      slide.style[key] = `calc(${100 / slidesPerView}% - ${
+      const style = `calc(${100 / slidesPerView}% - ${
         (spacing / slidesPerView) * (slidesPerView - 1)
       }px)`
+      if (isVertialSlider()) {
+        slide.style['min-height'] = style
+        slide.style['max-height'] = style
+      } else {
+        slide.style['min-width'] = style
+        slide.style['max-width'] = style
+      }
     })
   }
 
   function slidesRemoveStyles() {
     if (!slides) return
+    let styles = ['transform', '-webkit-transform']
+    styles = isVertialSlider
+      ? [...styles, 'min-height', 'max-height']
+      : [...styles, 'min-width', 'max-width']
     slides.forEach(slide => {
-      slide.style.removeProperty(isVertialSlider() ? 'height' : 'width')
-      slide.style.removeProperty('transform')
-      slide.style.removeProperty('-webkit-transform')
+      styles.forEach(style => {
+        slide.style.removeProperty(style)
+      })
     })
   }
 
@@ -544,7 +569,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     // todo - improve measurement - it could be better for ios
     clearTimeout(trackMeasureTimeout)
     const direction = Math.sign(val)
-    if (direction !== trackDirection) trackMeasurePoints = []
+    if (direction !== trackDirection) trackMeasureReset()
     trackDirection = direction
     trackMeasurePoints.push({
       distance: val,
@@ -564,6 +589,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     const end = trackMeasurePoints[trackMeasurePoints.length - 1].time
     const start = trackMeasurePoints[0].time
     trackSpeed = clampValue(distance / (end - start), -10, 10)
+  }
+
+  function trackMeasureReset() {
+    trackMeasurePoints = []
   }
 
   // todo - option for not calculating slides that are not in sight
@@ -626,12 +655,11 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function trackSetPositionByIdx(idx) {
     hook('beforeChange')
-    trackAdd(trackGetIdxDistance(idx))
+    trackAdd(trackGetIdxDistance(idx), false)
     hook('afterChange')
   }
 
   const defaultOptions = {
-    autoHeight: true,
     centered: false,
     breakpoints: null,
     controls: true,
@@ -640,6 +668,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     loop: false,
     initial: 0,
     duration: 500,
+    preventEvent: 'data-keen-slider-pe',
     slides: '.keen-slider__slide',
     vertical: false,
     resetSlide: false,

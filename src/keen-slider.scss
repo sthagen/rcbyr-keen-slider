@@ -1,5 +1,5 @@
 .keen-slider {
-  display: block;
+  display: flex;
   overflow: hidden;
   position: relative;
   user-select: none;
@@ -10,13 +10,17 @@
   -webkit-tap-highlight-color: transparent;
 
   &__slide {
-    position: absolute;
+    position: relative;
     overflow: hidden;
     width: 100%;
     min-height: 100%;
   }
 
-  &--vertical &__slide {
-    min-height: auto;
+  &[data-keen-slider-v] {
+    flex-wrap: wrap;
+  }
+
+  &[data-keen-slider-v] &__slide {
+    width: 100%;
   }
 }

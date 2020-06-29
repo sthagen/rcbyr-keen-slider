@@ -17,6 +17,7 @@ export type TDetails = {
   direction: 1 | 0 | -1
   progressTrack: number
   progressSlides: number
+  position: number
   positions: {
     distance: number
     portion: number
@@ -29,7 +30,6 @@ export type TDetails = {
 }
 
 export type TOptions = {
-  autoHeight?: boolean
   breakpoints?: {
     [key: string]: Omit<TOptionsEvents, 'breakpoints'>
   }
@@ -41,12 +41,14 @@ export type TOptions = {
   initial?: number
   loop?: boolean
   mode?: 'snap' | 'free' | 'free-snap'
+  preventEvent?: string
   resetSlide?: boolean
   rubberband?: boolean
   slides?: TSlides
   slidesPerView?: number
   spacing?: number
   vertical?: boolean
+  inlineBlockMode?: boolean
 }
 
 export type TEvents = {
