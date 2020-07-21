@@ -1,9 +1,11 @@
 import './polyfills'
 
 function KeenSlider(initialContainer, initialOptions = {}) {
-  const events = []
+  const attributeMoving = 'data-keen-slider-moves'
   const attributeVertical = 'data-keen-slider-v'
+
   let container
+  let events = []
   let touchControls
   let length
   let origin
@@ -49,7 +51,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function eventAdd(element, event, handler, options = {}) {
     element.addEventListener(event, handler, options)
-    events.push([element, event, handler])
+    events.push([element, event, handler, options])
   }
 
   function eventDrag(e) {
@@ -66,9 +68,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     if (touchJustStarted) {
       trackMeasureReset()
       touchLastX = x
+      container.setAttribute(attributeMoving, true)
+      touchJustStarted = false
     }
     if (e.cancelable) e.preventDefault()
-    touchJustStarted = false
     const touchDistance = touchLastX - x
     trackAdd(touchMultiplicator(touchDistance, pubfuncs), e.timeStamp)
     touchLastX = x
@@ -94,6 +97,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
       !isTouchable()
     )
       return
+    container.removeAttribute(attributeMoving)
     touchActive = false
     moveWithSpeed()
 
@@ -176,8 +180,9 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function eventsRemove() {
     events.forEach(event => {
-      event[0].removeEventListener(event[1], event[2])
+      event[0].removeEventListener(event[1], event[2], event[3])
     })
+    events = []
   }
 
   function hook(hook) {
@@ -378,6 +383,12 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     sliderRebind()
   }
 
+  function sliderGetSlidesPerView(option) {
+    return typeof option === 'function'
+      ? option()
+      : clampValue(option, 1, Math.max(isLoop() ? length - 1 : length, 1))
+  }
+
   function sliderInit() {
     sliderCheckBreakpoint()
     sliderCreated = true
@@ -408,11 +419,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     touchMultiplicator =
       typeof dragSpeed === 'function' ? dragSpeed : val => val * dragSpeed
     width = isVertialSlider() ? container.offsetHeight : container.offsetWidth
-    slidesPerView = clampValue(
-      options.slidesPerView,
-      1,
-      Math.max(isLoop() ? length - 1 : length, 1)
-    )
+    slidesPerView = sliderGetSlidesPerView(options.slidesPerView)
     spacing = clampValue(options.spacing, 0, width / (slidesPerView - 1) - 1)
     width += spacing
     origin = isCenterMode()
@@ -534,6 +541,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
       relativeSlide: ((trackCurrentIdx % length) + length) % length,
       absoluteSlide: trackCurrentIdx,
       size: length,
+      slidesPerView,
       widthOrHeight: width,
     }
   }

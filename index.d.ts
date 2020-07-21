@@ -26,8 +26,11 @@ export type TDetails = {
   relativeSlide: number
   absoluteSlide: number
   size: number
+  slidesPerView: number
   widthOrHeight: number
 }
+
+export type TSlidesPerViewGetter = () => number
 
 export type TOptions = {
   breakpoints?: {
@@ -45,7 +48,7 @@ export type TOptions = {
   resetSlide?: boolean
   rubberband?: boolean
   slides?: TSlides
-  slidesPerView?: number
+  slidesPerView?: number | TSlidesPerViewGetter
   spacing?: number
   vertical?: boolean
   inlineBlockMode?: boolean
