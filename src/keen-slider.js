@@ -73,7 +73,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     }
     if (e.cancelable) e.preventDefault()
     const touchDistance = touchLastX - x
-    trackAdd(touchMultiplicator(touchDistance, pubfuncs), e.timeStamp)
+    trackAdd(touchMultiplicator(touchDistance, pubfuncs) * (!isRtl() ? 1 : -1), e.timeStamp)
     touchLastX = x
   }
 
@@ -166,9 +166,9 @@ function KeenSlider(initialContainer, initialOptions = {}) {
       e.preventDefault()
     })
     eventAdd(container, 'mousedown', eventDragStart)
-    eventAdd(container, 'mousemove', eventDrag)
-    eventAdd(container, 'mouseleave', eventDragStop)
-    eventAdd(container, 'mouseup', eventDragStop)
+    eventAdd(options.cancelOnLeave ? container : window, 'mousemove', eventDrag)
+    if (options.cancelOnLeave) eventAdd(container, 'mouseleave', eventDragStop)
+    eventAdd(window, 'mouseup', eventDragStop)
     eventAdd(container, 'touchstart', eventDragStart, {
       passive: true,
     })
@@ -207,6 +207,10 @@ function KeenSlider(initialContainer, initialOptions = {}) {
 
   function isLoop() {
     return options.loop
+  }
+
+  function isRtl() {
+    return options.rtl
   }
 
   function isRubberband() {
@@ -645,7 +649,9 @@ function KeenSlider(initialContainer, initialOptions = {}) {
           : 1
       slidePositions.push({
         portion: portion < 0 || portion > 1 ? 0 : portion,
-        distance,
+        distance: !isRtl()
+        ? distance
+        : distance * -1 + 1 - slideWidth
       })
     }
     trackSlidePositions = slidePositions
@@ -665,6 +671,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   function trackSetCurrentIdx() {
     const new_idx = Math.round(trackPosition / (width / slidesPerView))
     if (new_idx === trackCurrentIdx) return
+    if (!isLoop() && (new_idx < 0 || new_idx > length - 1)) return
     trackCurrentIdx = new_idx
     hook('slideChanged')
   }
@@ -691,7 +698,9 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     slidesPerView: 1,
     spacing: 0,
     mode: 'snap',
+    rtl: false,
     rubberband: true,
+    cancelOnLeave: true
   }
 
   const pubfuncs = {
