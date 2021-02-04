@@ -64,6 +64,7 @@ export type TEvents = {
   destroyed?: (instance: KeenSlider) => void
   mounted?: (instance: KeenSlider) => void
   move?: (instance: KeenSlider) => void
+  optionsChanged?: (instance: KeenSlider) => void
   slideChanged?: (instance: KeenSlider) => void
 }
 
@@ -84,4 +85,5 @@ export default class KeenSlider {
   moveToSlide: (slide: number, duration?: number) => void
   resize: () => void
   details: () => TDetails
+  options: () => Omit<TOptionsEvents, 'breakpoints'>
 }
