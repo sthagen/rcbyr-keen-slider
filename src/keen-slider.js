@@ -38,6 +38,8 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   let touchLastClientY
   let touchMultiplicator
   let touchJustStarted
+  let touchSumDistance
+  let touchChecked
 
   // animation
   let reqId
@@ -68,11 +70,15 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     if (touchJustStarted) {
       trackMeasureReset()
       touchLastX = x
-      container.setAttribute(attributeMoving, true)
       touchJustStarted = false
     }
     if (e.cancelable) e.preventDefault()
     const touchDistance = touchLastX - x
+    touchSumDistance += Math.abs(touchDistance)
+    if (!touchChecked && touchSumDistance > 5) {
+      touchChecked = true
+      container.setAttribute(attributeMoving, true)
+    }
     trackAdd(
       touchMultiplicator(touchDistance, pubfuncs) * (!isRtl() ? 1 : -1),
       e.timeStamp
@@ -86,6 +92,8 @@ function KeenSlider(initialContainer, initialOptions = {}) {
     touchActive = true
     touchJustStarted = true
     touchIdentifier = eventGetIdentifier(e)
+    touchChecked = false
+    touchSumDistance = 0
     eventIsSlide(e)
     moveAnimateAbort()
     touchIndexStart = trackCurrentIdx
@@ -402,9 +410,11 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   }
 
   function sliderGetSlidesPerView(option) {
-    return typeof option === 'function'
-      ? option()
-      : clampValue(option, 1, Math.max(isLoop() ? length - 1 : length, 1))
+    if (typeof option === 'function') return option()
+    const adjust = options.autoAdjustSlidesPerView
+    if (!adjust) length = Math.max(option, length)
+    const max = isLoop() && adjust ? length - 1 : length
+    return clampValue(option, 1, Math.max(max, 1))
   }
 
   function sliderInit() {
@@ -687,6 +697,7 @@ function KeenSlider(initialContainer, initialOptions = {}) {
   }
 
   const defaultOptions = {
+    autoAdjustSlidesPerView: true,
     centered: false,
     breakpoints: null,
     controls: true,
