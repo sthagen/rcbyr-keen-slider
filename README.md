@@ -1,20 +1,43 @@
-[![npm version](https://badge.fury.io/js/keen-slider.svg)](https://www.npmjs.com/package/keen-slider)
-[![npm downloads](https://img.shields.io/npm/dm/keen-slider)](https://www.npmjs.com/package/keen-slider)
+<p align="center">
+<a href="https://www.npmjs.com/package/keen-slider"><img src="https://badge.fury.io/js/keen-slider.svg" /></a>
+<a href="https://www.npmjs.com/package/keen-slider"><img src="https://img.shields.io/npm/l/keen-slider?color=success" /></a>
+<a href="https://www.npmjs.com/package/keen-slider"><img src="https://img.shields.io/npm/dm/keen-slider" /></a>
 
-# Keen-Slider
+</p>
+<p align="center">
+<a href="https://keen-slider.io" title="Keen-Slider"><img width="340" src="https://keen-slider.io/images/logo-github.svg" /></a>
+</p>
+<p align="center">
+  The touch slider library that lets you easily create sliders, carousels and <a href="https://keen-slider.io/examples">much more.</a>
+</p>
+<br/>
 
-[![Card](https://keen-slider.io/images/card.gif)](https://keen-slider.io/examples#draggable-card) [![DatePicker](https://keen-slider.io/images/demo2.gif)](https://keen-slider.io/examples#datetimepicker)
+<p align="center">
+<a href="https://keen-slider.io/examples#draggable-card"><img src="https://keen-slider.io/images/card.gif" /></a>
+<a href="https://keen-slider.io/examples#datetimepicker"><img src="https://keen-slider.io/images/demo2.gif" /></a>
+</p>
 
-**Keen-Slider** is a free library agnostic touch slider
-with native touch/swipe behavior and great performance. It comes with
-**no dependencies**, **typescript support**, **multitouch support**
-and is compatible with
-**all common browsers including IE 10**. Furthermore it comes with a **React Hook**, a **React Native Hook** and a **Vue 3 Composition Function** for easier use.
+## Features
+
+- **Library Agnostic:** Works well in JavaScript, TypeScript, React, Vue, Angular, React Native etc.
+- **Lightweight:** No dependencies, only ~5.5KB gzipped
+- **Mobile First:**: Supports multi touch and is fully responsive
+- **Great Performance:** Native touch/swipe behavior
+- **Compatible:** Works in all common browsers, including >= IE 10 and React Native
+- **Open Source:** Freely available under the MIT license
+- **Extensible:** Rich but simple API
 
 ## Getting Started
 
 - [Documentation](https://keen-slider.io/docs)
 - [Examples](https://keen-slider.io/examples)
+
+## Used by
+
+<p align="middle" dir="auto">
+  <a href="https://nextjs.org/commerce" rel="nofollow"><img width="285" src="https://keen-slider.io/images/next.png" style="max-width: 100%;"></a>
+  <a href="https://tinder.com/" rel="nofollow"><img width="285" src="https://keen-slider.io/images/tinder.png" style="max-width: 100%;">
+</p>
 
 ## Contributing
 
