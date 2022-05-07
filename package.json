@@ -1,6 +1,6 @@
 {
   "name": "keen-slider",
-  "version": "6.6.11",
+  "version": "6.6.13",
   "description": "The HTML touch slider carousel with the most native feeling you will get.",
   "main": "keen-slider.cjs.js",
   "jsnext:main": "keen-slider.es.js",
@@ -16,7 +16,6 @@
     "type": "git",
     "url": "git+https://github.com/rcbyr/keen-slider.git"
   },
-  "sideEffects": false,
   "keywords": [
     "slider",
     "carousel",
