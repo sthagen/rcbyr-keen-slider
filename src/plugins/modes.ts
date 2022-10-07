@@ -24,6 +24,7 @@ export default function Free(
 ): void {
   let startIdx, moveIdx
   let currentDirection
+  let checked
   let min
   let max
   let minIdx
@@ -140,6 +141,7 @@ export default function Free(
   }
 
   function end() {
+    if (!checked) return
     const mode = slider.options.mode
     if (mode === 'snap') snap()
     if (mode === 'free' || mode === 'free-snap') free()
@@ -163,8 +165,13 @@ export default function Free(
     maxIdx = details.maxIdx
   }
 
+  function check() {
+    checked = true
+  }
+
   function start() {
     stop()
+    checked = false
     startIdx = moveIdx = slider.track.details.abs
   }
 
@@ -180,6 +187,7 @@ export default function Free(
   slider.on('optionsChanged', update)
   slider.on('created', update)
   slider.on('dragStarted', start)
+  slider.on('dragChecked', check)
   slider.on('dragEnded', end)
   slider.on('dragged', drag)
 }
