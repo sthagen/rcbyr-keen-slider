@@ -23,6 +23,7 @@ export default function Free(
   >
 ): void {
   let startIdx, moveIdx
+  let checked
   let currentDirection
   let checked
   let min
@@ -46,11 +47,15 @@ export default function Free(
     return 1 - Math.pow(1 - t, 3)
   }
 
+  function velocity() {
+    return checked ? slider.track.velocity() : 0
+  }
+
   function snap() {
     const track = slider.track
     const details = slider.track.details
     const position = details.position
-    let direction = sign(track.velocity())
+    let direction = sign(velocity())
     if (position > max || position < min) {
       direction = 0
     }
@@ -77,7 +82,7 @@ export default function Free(
     stop()
     const isFreeSnap = slider.options.mode === 'free-snap'
     const track = slider.track
-    const speed = track.velocity()
+    const speed = velocity()
     currentDirection = sign(speed)
     const trackDetails = slider.track.details
     const keyframes = []
@@ -170,6 +175,7 @@ export default function Free(
   }
 
   function start() {
+    checked = false
     stop()
     checked = false
     startIdx = moveIdx = slider.track.details.abs
@@ -177,6 +183,10 @@ export default function Free(
 
   function stop() {
     slider.animator.stop()
+  }
+
+  function check() {
+    checked = true
   }
 
   function drag() {
